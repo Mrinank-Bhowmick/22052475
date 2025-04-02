@@ -100,6 +100,21 @@ app.post("/auth", async (req: Request, res: Response) => {
   res.status(200).json(authResponse);
 });
 
+app.get("/users", async (req: Request, res: Response) => {
+  const response = await fetch(
+    "http://20.244.56.144/evaluation-service/users",
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const usersData = await response.json();
+  res.status(200).json(usersData);
+});
+
 app.get("/users/:userid/posts", async (req: Request, res: Response) => {
   const { userid } = req.params;
 
