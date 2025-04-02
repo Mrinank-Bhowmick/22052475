@@ -15,12 +15,66 @@ interface AuthResponse {
   expires: string;
 }
 
+interface RegisterRequest {
+  email: string;
+  name: string;
+  mobileNo: string;
+  githubUsername: string;
+  rollNo: string;
+  collegeName: string;
+  accessCode: string;
+}
+
+interface RegisterResponse {
+  email: string;
+  name: string;
+  rollNo: string;
+  accessCode: string;
+  clientID: string;
+  clientSecret: string;
+}
+
 const app = express();
 app.use(express.json());
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_URL as string,
   token: process.env.UPSTASH_REDIS_TOKEN as string,
+});
+
+app.post("/register", async (req: Request, res: Response) => {
+  const {
+    email,
+    name,
+    mobileNo,
+    githubUsername,
+    rollNo,
+    collegeName,
+    accessCode,
+  } = req.body as RegisterRequest;
+
+  const response = await fetch(
+    "http://20.244.56.144/evaluation-service/register",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        name,
+        mobileNo,
+        githubUsername,
+        rollNo,
+        collegeName,
+        accessCode,
+      }),
+    }
+  );
+
+  const registerResponse: RegisterResponse = await response.json();
+
+  return res.status(200).json(registerResponse);
 });
 
 app.post("/auth", async (req: Request, res: Response) => {
