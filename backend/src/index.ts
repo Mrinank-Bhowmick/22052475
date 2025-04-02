@@ -101,15 +101,26 @@ app.post("/auth", async (req: Request, res: Response) => {
 });
 
 app.get("/users", async (req: Request, res: Response) => {
+  const authToken = req.headers.authorization;
+
+  if (!authToken) {
+    return res.status(401).json({ error: "Authorization token is required" });
+  }
+
   const response = await fetch(
     "http://20.244.56.144/evaluation-service/users",
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: authToken,
       },
     }
   );
+
+  if (!response.ok) {
+    return res.status(response.status).json({ error: response.statusText });
+  }
 
   const usersData = await response.json();
   res.status(200).json(usersData);
@@ -117,6 +128,11 @@ app.get("/users", async (req: Request, res: Response) => {
 
 app.get("/users/:userid/posts", async (req: Request, res: Response) => {
   const { userid } = req.params;
+  const authToken = req.headers.authorization;
+
+  if (!authToken) {
+    return res.status(401).json({ error: "Authorization token is required" });
+  }
 
   const response = await fetch(
     `http://20.244.56.144/evaluation-service/users/${userid}/posts`,
@@ -124,12 +140,40 @@ app.get("/users/:userid/posts", async (req: Request, res: Response) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: authToken,
       },
     }
   );
 
   const postsData = await response.json();
   res.status(200).json(postsData);
+});
+
+app.get("/posts/:postid/comments", async (req: Request, res: Response) => {
+  const { postid } = req.params;
+  const authToken = req.headers.authorization;
+
+  if (!authToken) {
+    return res.status(401).json({ error: "Authorization token is required" });
+  }
+
+  const response = await fetch(
+    `http://20.244.56.144/evaluation-service/posts/${postid}/comments`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authToken,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return res.status(response.status).json({ error: response.statusText });
+  }
+
+  const commentsData = await response.json();
+  res.status(200).json(commentsData);
 });
 
 const PORT = process.env.PORT || 8000;
