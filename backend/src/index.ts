@@ -107,6 +107,12 @@ app.get("/users", async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Authorization token is required" });
   }
 
+  const cachedTopUsers = await redis.get("top_users");
+
+  if (cachedTopUsers) {
+    return res.status(200).json(cachedTopUsers);
+  }
+
   const response = await fetch(
     "http://20.244.56.144/evaluation-service/users",
     {
@@ -123,7 +129,37 @@ app.get("/users", async (req: Request, res: Response) => {
   }
 
   const usersData = await response.json();
-  res.status(200).json(usersData);
+
+  const userPostCounts = [];
+
+  for (const user of usersData.users) {
+    const userPostsResponse = await fetch(
+      `http://20.244.56.144/evaluation-service/users/${user.id}/posts`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authToken,
+        },
+      }
+    );
+
+    if (userPostsResponse.ok) {
+      const postsData = await userPostsResponse.json();
+      userPostCounts.push({
+        ...user,
+        postCount: postsData.posts.length,
+      });
+    }
+  }
+
+  const topUsers = userPostCounts
+    .sort((a, b) => b.postCount - a.postCount)
+    .slice(0, 5);
+
+  await redis.set("top_users", { users: topUsers }, { ex: 3600 });
+
+  res.status(200).json({ users: topUsers });
 });
 
 app.get("/users/:userid/posts", async (req: Request, res: Response) => {
