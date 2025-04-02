@@ -100,6 +100,23 @@ app.post("/auth", async (req: Request, res: Response) => {
   res.status(200).json(authResponse);
 });
 
+app.get("/users/:userid/posts", async (req: Request, res: Response) => {
+  const { userid } = req.params;
+
+  const response = await fetch(
+    `http://20.244.56.144/evaluation-service/users/${userid}/posts`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const postsData = await response.json();
+  res.status(200).json(postsData);
+});
+
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`running ${PORT}`);
